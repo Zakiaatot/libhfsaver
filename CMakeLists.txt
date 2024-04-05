@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.22)
 project(
     hfsaver
     VERSION 0.1.0
-    DESCRIPTION "A library for saving http-flv streams to disk."
-    HOMEPAGE_URL "https://github.com/zakiaatot/libmterm"
+    DESCRIPTION "A Thread-safe library for saving http-flv streams to disk."
+    HOMEPAGE_URL "https://github.com/zakiaatot/libhfsaver"
     LANGUAGES C CXX
 )
 
