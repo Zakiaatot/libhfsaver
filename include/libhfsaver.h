@@ -35,6 +35,7 @@ extern "C"
 
     // utils
     HfsRet hfs_utils_split_mp3_from_flv(IN const char* flv_save_path, IN const char* mp3_save_path);
+    HfsRet hfs_utils_get_key_frame(IN const char* flv_save_path, IN const char* key_frame_save_path);
 
 
 #ifdef __cplusplus
