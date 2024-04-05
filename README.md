@@ -1,6 +1,6 @@
 # libhfsaver
 
-A library for saving http-flv streams to disk.
+A Thread-safe library for saving http-flv streams to disk.
 
 ## Prerequisites
 
