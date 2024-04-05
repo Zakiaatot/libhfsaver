@@ -2,7 +2,14 @@
 
 A Thread-safe library for saving http-flv streams to disk.
 
-## Prerequisites
+## Progressing
+
+1. [x] Save http-flv streams to disk
+2. [ ] Split audio from http-flv streams to mp3
+3. [ ] Get keyframes from http-flv streams
+4. [ ] hfs_cli example
+
+## Build
 
 1. Install needed packages:
    _Ubuntu_:
