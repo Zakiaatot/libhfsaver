@@ -132,7 +132,7 @@ void Hfs::task_process(int task_id, std::string url, std::string save_path)
         }
 
         // 创建输出文件上下文
-        AVOutputFormat* fmt = av_guess_format("flv", NULL, NULL);
+        const AVOutputFormat* fmt = av_guess_format("flv", NULL, NULL);
         if ((ret = avformat_alloc_output_context2(&out_fmt_ctx, fmt, NULL, NULL)) < 0)
         {
             hfs_ret = ERROR_FFMPEG_OUTPUT_CONTEXT;
@@ -145,7 +145,7 @@ void Hfs::task_process(int task_id, std::string url, std::string save_path)
         for (unsigned int i = 0; i < in_fmt_ctx->nb_streams; i++)
         {
             AVStream* in_stream = in_fmt_ctx->streams[i];
-            AVCodec* codec = avcodec_find_decoder(in_stream->codecpar->codec_id);
+            const AVCodec* codec = avcodec_find_decoder(in_stream->codecpar->codec_id);
             if (!codec)
             {
                 hfs_ret = ERROR_FFMPEG_CODEC_FIND;
@@ -264,7 +264,7 @@ Hfs::StatusVoid Hfs::utils_get_key_frame(std::string flv_save_path, std::string 
     command += std::to_string(fps);
     command += " \"";
     command += key_frame_save_path;
-    command += "/\%d.jpg\"";
+    command += "/%d.jpg\"";
 
     // 运行FFmpeg命令
     int result = std::system(command.c_str());

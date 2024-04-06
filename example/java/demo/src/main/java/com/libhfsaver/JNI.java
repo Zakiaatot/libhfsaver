@@ -2,8 +2,25 @@ package com.libhfsaver;
 
 public class JNI {
     static {
-        String libPath = System.getProperty("user.dir") + "/lib/libhfsaver_shared.so";
-        System.load(libPath);
+        try {
+            // 根据操作系统类型构建库文件路径
+            String osName = System.getProperty("os.name").toLowerCase();
+            String libPath = System.getProperty("user.dir");
+            if (osName.contains("win")) {
+                libPath += "\\lib\\";
+                libPath += "hfsaver_shared.dll";
+            } else if (osName.contains("nux") || osName.contains("nix")) {
+                libPath += "/lib/";
+                libPath += "libhfsaver_shared.so";
+            } else {
+                throw new UnsupportedOperationException("不支持的操作系统: " + osName);
+            }
+            System.out.println(libPath);
+            System.load(libPath);
+        } catch (UnsatisfiedLinkError e) {
+            System.err.println("无法加载库文件: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     // native 方法声明

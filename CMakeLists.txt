@@ -12,6 +12,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED 17)
 
 # ffmpeg libs
+if(CMAKE_SYSTEM_NAME MATCHES "Windows")
+    include_directories(c:/ffmpeg/include)
+    set(ENV{PKG_CONFIG_PATH} "C:\\ffmpeg\\lib\\pkgconfig")
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
 add_subdirectory(lib/FFmpeg)
 
 # make sure we have all the required libraries
