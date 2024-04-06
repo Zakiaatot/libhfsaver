@@ -1,11 +1,7 @@
 #define __STDC_CONSTANT_MACROS
 extern "C"
 {
-#include <libavutil/avutil.h>
-#include <libavutil/channel_layout.h>
 #include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#include <libavcodec/codec_id.h>
 }
 #include <string>
 #include <iostream>
