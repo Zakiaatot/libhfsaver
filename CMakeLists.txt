@@ -18,6 +18,9 @@ add_subdirectory(lib/FFmpeg)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src SRC)
 
+# jni
+include_directories(${PROJECT_SOURCE_DIR}/jni/linux)
+
 
 add_library(${PROJECT_NAME}_shared SHARED ${SRC})
 set_target_properties(

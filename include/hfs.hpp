@@ -28,18 +28,18 @@ public:
     };
     using StatusVoid = typename Hfs::Status<void*>;
 public:
-    Status<int> task_begin(const char* url, const char* save_path);
+    Status<int> task_begin(std::string url, std::string save_path);
     StatusVoid task_end(const int task_id);
     Status<HfsTaskInfo> task_query(const int task_id);
     Status<std::vector<HfsTaskInfo>> task_query_all();
-    StatusVoid utils_split_mp3_from_flv(const char* flv_save_path, const char* mp3_save_path);
-    StatusVoid utils_get_key_frame(const char* flv_save_path, const char* key_frame_save_path, const float fps);
+    StatusVoid utils_split_mp3_from_flv(std::string flv_save_path, std::string mp3_save_path);
+    StatusVoid utils_get_key_frame(std::string flv_save_path, std::string key_frame_save_path, const float fps);
 private:
     Hfs();
     ~Hfs();
     static void task_process(int task_id, std::string url, std::string save_path);
     static void task_ret(int task_id, HfsRet msg_code);
-    static void task_info_update(int task_id, const char* save_path);
+    static void task_info_update(int task_id, std::string save_path);
     std::atomic<int> task_id_counter_;
     ThreadPool* p_thread_pool_;
     std::unordered_map<int, HfsTaskInfo> task_info_map_;

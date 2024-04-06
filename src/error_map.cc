@@ -16,5 +16,7 @@ const std::unordered_map<HfsRet, const char*> g_error_map =
     {ERROR_FFMPEG_READ_PACKET,"failed to read packet"},
     {ERROR_HFS_MAX_TASK,"reached max task number"},
     {ERROR_HFS_TASK_NOT_FOUND,"task not found"},
-    {ERROR_HFS_CMD_EXEC,"cmd execute failed"}
+    {ERROR_HFS_CMD_EXEC,"cmd execute failed"},
+    {ERROR_JNI_OBJECT_DEFINE,"java object defined error"},
+    {ERROR_JNI_MEMORY_ALLOC,"jni malloc failed"}
 };

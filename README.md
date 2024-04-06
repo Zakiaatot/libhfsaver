@@ -5,9 +5,9 @@ A Thread-safe library for saving http-flv streams to disk.
 ## Progressing
 
 1. [x] Save http-flv streams to disk
-2. [X] Split audio from http-flv streams to mp3
-3. [X] Get keyframes from http-flv streams
-4. [ ] hfs_cli example
+2. [x] Split audio from http-flv streams to mp3
+3. [x] Get keyframes from http-flv streams
+4. [x] add java native interface
 
 ## Build
 

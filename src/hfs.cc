@@ -8,6 +8,7 @@ extern "C"
 #include <libavcodec/codec_id.h>
 }
 #include <string>
+#include <iostream>
 #include "hfs.hpp"
 #include "error_map.hpp"
 #include "utils.hpp"
@@ -24,7 +25,7 @@ Hfs::~Hfs()
     delete p_thread_pool_;
 }
 
-Hfs::Status<int> Hfs::task_begin(const char* url, const char* save_path)
+Hfs::Status<int> Hfs::task_begin(std::string url, std::string save_path)
 {
     std::unique_lock<std::mutex> lock(map_mutex_);
     if (task_info_map_.size() >= HFS_MAX_TASK_NUM)
@@ -89,12 +90,12 @@ void Hfs::task_ret(int task_id, HfsRet msg_code)
     hfs.task_info_map_[task_id].status = HfsTaskStatus::Finish;
 }
 
-void Hfs::task_info_update(int task_id, const char* save_path)
+void Hfs::task_info_update(int task_id, std::string save_path)
 {
     Hfs& hfs = Singleton<Hfs>::get_instance();
     std::unique_lock<std::mutex> lock(hfs.map_mutex_);
     hfs.task_info_map_[task_id].last_save_time = Utils::get_timestamp_ms();
-    unsigned long file_size = Utils::get_file_size(save_path);
+    unsigned long file_size = Utils::get_file_size(save_path.c_str());
     if (file_size > 0)
     {
         hfs.task_info_map_[task_id].saved_size = file_size;
@@ -103,6 +104,8 @@ void Hfs::task_info_update(int task_id, const char* save_path)
 
 void Hfs::task_process(int task_id, std::string url, std::string save_path)
 {
+    std::cout << url << std::endl;
+    std::cout << save_path << std::endl;
     AVFormatContext* in_fmt_ctx = NULL, * out_fmt_ctx = NULL;
     AVIOContext* out_avio_ctx = NULL;
     int ret = 0;
@@ -234,7 +237,7 @@ ErrorExit:
 }
 
 
-Hfs::StatusVoid Hfs::utils_split_mp3_from_flv(const char* flv_save_path, const char* mp3_save_path) {
+Hfs::StatusVoid Hfs::utils_split_mp3_from_flv(std::string flv_save_path, std::string mp3_save_path) {
     // 构造FFmpeg命令用于从FLV文件中提取出音频并转换为MP3
     // ffmpeg -i 输入文件.flv -q:a 5 输出文件.mp3
     // 这里 -q:a 指定了音频的质量，数字越小质量越高
@@ -248,14 +251,15 @@ Hfs::StatusVoid Hfs::utils_split_mp3_from_flv(const char* flv_save_path, const c
     int result = std::system(command.c_str());
 
     // 检查命令是否成功执行
-    if (result != 0) {
+    if (result != 0)
+    {
         return StatusVoid::err(ERROR_HFS_CMD_EXEC);
     }
 
     return StatusVoid::ok();
 }
 
-Hfs::StatusVoid Hfs::utils_get_key_frame(const char* flv_save_path, const char* key_frame_save_path, const float fps)
+Hfs::StatusVoid Hfs::utils_get_key_frame(std::string flv_save_path, std::string key_frame_save_path, const float fps)
 {
     // ffmpeg -i out1.flv -vf fps=0.2 output_frames/%d.jpg
     std::string command = "ffmpeg -i \"";
@@ -270,7 +274,8 @@ Hfs::StatusVoid Hfs::utils_get_key_frame(const char* flv_save_path, const char* 
     int result = std::system(command.c_str());
 
     // 检查命令是否成功执行
-    if (result != 0) {
+    if (result != 0)
+    {
         return StatusVoid::err(ERROR_HFS_CMD_EXEC);
     }
 
