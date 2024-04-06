@@ -132,7 +132,7 @@ void Hfs::task_process(int task_id, std::string url, std::string save_path)
         }
 
         // 创建输出文件上下文
-        const AVOutputFormat* fmt = av_guess_format("flv", NULL, NULL);
+        auto fmt = av_guess_format("flv", NULL, NULL);
         if ((ret = avformat_alloc_output_context2(&out_fmt_ctx, fmt, NULL, NULL)) < 0)
         {
             hfs_ret = ERROR_FFMPEG_OUTPUT_CONTEXT;
