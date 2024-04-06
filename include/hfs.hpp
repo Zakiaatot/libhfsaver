@@ -9,7 +9,7 @@
 #include "singleton.hpp"
 #include "thread_pool.hpp"
 
-#define HFS_MAX_TASK_NUM 4
+#define HFS_MAX_TASK_NUM 12
 
 class Hfs {
     friend class Singleton<Hfs>;
@@ -32,6 +32,8 @@ public:
     StatusVoid task_end(const int task_id);
     Status<HfsTaskInfo> task_query(const int task_id);
     Status<std::vector<HfsTaskInfo>> task_query_all();
+    StatusVoid utils_split_mp3_from_flv(const char* flv_save_path, const char* mp3_save_path);
+    StatusVoid utils_get_key_frame(const char* flv_save_path, const char* key_frame_save_path, const float fps);
 private:
     Hfs();
     ~Hfs();

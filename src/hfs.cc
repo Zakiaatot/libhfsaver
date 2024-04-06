@@ -1,7 +1,11 @@
+#define __STDC_CONSTANT_MACROS
 extern "C"
 {
+#include <libavutil/avutil.h>
+#include <libavutil/channel_layout.h>
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
+#include <libavcodec/codec_id.h>
 }
 #include <string>
 #include "hfs.hpp"
@@ -108,26 +112,30 @@ void Hfs::task_process(int task_id, std::string url, std::string save_path)
     do
     {
         // 打开输入流
-        if ((ret = avformat_open_input(&in_fmt_ctx, url.c_str(), NULL, NULL)) < 0) {
+        if ((ret = avformat_open_input(&in_fmt_ctx, url.c_str(), NULL, NULL)) < 0)
+        {
             hfs_ret = ERROR_FFMPEG_INPUT_STREAM;
             break;
         }
 
         // 获取流信息
-        if ((ret = avformat_find_stream_info(in_fmt_ctx, NULL)) < 0) {
+        if ((ret = avformat_find_stream_info(in_fmt_ctx, NULL)) < 0)
+        {
             hfs_ret = ERROR_FFMPEG_STREAM_INFO;
             break;
         }
 
         // 打开输出文件
-        if ((ret = avio_open2(&out_avio_ctx, save_path.c_str(), AVIO_FLAG_WRITE, NULL, NULL)) < 0) {
+        if ((ret = avio_open2(&out_avio_ctx, save_path.c_str(), AVIO_FLAG_WRITE, NULL, NULL)) < 0)
+        {
             hfs_ret = ERROR_FFMPEG_OUTPUT_OPEN;
             break;
         }
 
         // 创建输出文件上下文
         AVOutputFormat* fmt = av_guess_format("flv", NULL, NULL);
-        if ((ret = avformat_alloc_output_context2(&out_fmt_ctx, fmt, NULL, NULL)) < 0) {
+        if ((ret = avformat_alloc_output_context2(&out_fmt_ctx, fmt, NULL, NULL)) < 0)
+        {
             hfs_ret = ERROR_FFMPEG_OUTPUT_CONTEXT;
             break;
         }
@@ -135,27 +143,32 @@ void Hfs::task_process(int task_id, std::string url, std::string save_path)
         out_fmt_ctx->url = av_strdup(save_path.c_str());
 
         // 复制输入流信息到输出上下文
-        for (unsigned int i = 0; i < in_fmt_ctx->nb_streams; i++) {
+        for (unsigned int i = 0; i < in_fmt_ctx->nb_streams; i++)
+        {
             AVStream* in_stream = in_fmt_ctx->streams[i];
             AVCodec* codec = avcodec_find_decoder(in_stream->codecpar->codec_id);
-            if (!codec) {
+            if (!codec)
+            {
                 hfs_ret = ERROR_FFMPEG_CODEC_FIND;
                 goto ErrorExit;
             }
             AVStream* out_stream = avformat_new_stream(out_fmt_ctx, NULL);
-            if (!out_stream) {
+            if (!out_stream)
+            {
                 hfs_ret = ERROR_FFMPEG_OUTPUT_CREATE;
                 goto ErrorExit;
             }
             ret = avcodec_parameters_copy(out_stream->codecpar, in_stream->codecpar);
-            if (ret < 0) {
+            if (ret < 0)
+            {
                 hfs_ret = ERROR_FFMPEG_CODEC_COPY;
                 goto ErrorExit;
             }
         }
 
         // 写文件头
-        if ((ret = avformat_write_header(out_fmt_ctx, NULL)) < 0) {
+        if ((ret = avformat_write_header(out_fmt_ctx, NULL)) < 0)
+        {
             hfs_ret = ERROR_FFMPEG_WRITE_HEADER;
             break;
         }
@@ -170,8 +183,10 @@ void Hfs::task_process(int task_id, std::string url, std::string save_path)
                     break;
             }
             ret = av_read_frame(in_fmt_ctx, &pkt);
-            if (ret < 0) {
-                if (ret == AVERROR_EOF) {
+            if (ret < 0)
+            {
+                if (ret == AVERROR_EOF)
+                {
                     break;
                 }
                 hfs_ret = ERROR_FFMPEG_READ_PACKET;
@@ -182,7 +197,8 @@ void Hfs::task_process(int task_id, std::string url, std::string save_path)
                 out_fmt_ctx->streams[pkt.stream_index]->time_base);
 
             ret = av_interleaved_write_frame(out_fmt_ctx, &pkt);
-            if (ret < 0) {
+            if (ret < 0)
+            {
                 hfs_ret = ERROR_FFMPEG_WRITE_PACKET;
                 goto ErrorExit;
             }
@@ -193,7 +209,8 @@ void Hfs::task_process(int task_id, std::string url, std::string save_path)
 
         //正常结束
         avformat_close_input(&in_fmt_ctx);
-        if (out_fmt_ctx && !out_avio_ctx) {
+        if (out_fmt_ctx && !out_avio_ctx)
+        {
             avformat_free_context(out_fmt_ctx);
         }
         avio_closep(&out_avio_ctx);
@@ -208,9 +225,54 @@ void Hfs::task_process(int task_id, std::string url, std::string save_path)
     // 异常结束
 ErrorExit:
     avformat_close_input(&in_fmt_ctx);
-    if (out_fmt_ctx && !out_avio_ctx) {
+    if (out_fmt_ctx && !out_avio_ctx)
+    {
         avformat_free_context(out_fmt_ctx);
     }
     avio_closep(&out_avio_ctx);
     return task_ret(task_id, hfs_ret);
+}
+
+
+Hfs::StatusVoid Hfs::utils_split_mp3_from_flv(const char* flv_save_path, const char* mp3_save_path) {
+    // 构造FFmpeg命令用于从FLV文件中提取出音频并转换为MP3
+    // ffmpeg -i 输入文件.flv -q:a 5 输出文件.mp3
+    // 这里 -q:a 指定了音频的质量，数字越小质量越高
+    std::string command = "ffmpeg -i \"";
+    command += flv_save_path;
+    command += "\" -q:a 5 \"";
+    command += mp3_save_path;
+    command += "\"";
+
+    // 运行FFmpeg命令
+    int result = std::system(command.c_str());
+
+    // 检查命令是否成功执行
+    if (result != 0) {
+        return StatusVoid::err(ERROR_HFS_CMD_EXEC);
+    }
+
+    return StatusVoid::ok();
+}
+
+Hfs::StatusVoid Hfs::utils_get_key_frame(const char* flv_save_path, const char* key_frame_save_path, const float fps)
+{
+    // ffmpeg -i out1.flv -vf fps=0.2 output_frames/%d.jpg
+    std::string command = "ffmpeg -i \"";
+    command += flv_save_path;
+    command += "\" -vf fps=";
+    command += std::to_string(fps);
+    command += " \"";
+    command += key_frame_save_path;
+    command += "/\%d.jpg\"";
+
+    // 运行FFmpeg命令
+    int result = std::system(command.c_str());
+
+    // 检查命令是否成功执行
+    if (result != 0) {
+        return StatusVoid::err(ERROR_HFS_CMD_EXEC);
+    }
+
+    return StatusVoid::ok();
 }

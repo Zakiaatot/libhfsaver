@@ -67,11 +67,11 @@ HfsRet hfs_error_message_query(IN const HfsRet code, OUT char* err_buf)
 
 HfsRet hfs_utils_split_mp3_from_flv(IN const char* flv_save_path, IN const char* mp3_save_path)
 {
-    return OK;
+    return Singleton<Hfs>::get_instance().utils_split_mp3_from_flv(flv_save_path, mp3_save_path).msg_code;
 }
 
-HfsRet hfs_utils_get_key_frame(IN const char* flv_save_path, IN const char* key_frame_save_path)
+HfsRet hfs_utils_get_key_frame(IN const char* flv_save_path, IN const char* key_frame_save_path, IN const float fps)
 {
-    return OK;
+    return Singleton<Hfs>::get_instance().utils_get_key_frame(flv_save_path, key_frame_save_path, fps).msg_code;
 }
 

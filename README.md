@@ -5,8 +5,8 @@ A Thread-safe library for saving http-flv streams to disk.
 ## Progressing
 
 1. [x] Save http-flv streams to disk
-2. [ ] Split audio from http-flv streams to mp3
-3. [ ] Get keyframes from http-flv streams
+2. [X] Split audio from http-flv streams to mp3
+3. [X] Get keyframes from http-flv streams
 4. [ ] hfs_cli example
 
 ## Build
@@ -15,7 +15,7 @@ A Thread-safe library for saving http-flv streams to disk.
    _Ubuntu_:
 
    ```bash
-   sudo apt install cmake pkg-config ffmpeg libavcodec-dev libavformat-dev libavfilter-dev libavdevice-dev
+   sudo apt install cmake pkg-config ffmpeg libavcodec-dev libmp3lame-dev libavformat-dev libavfilter-dev libavdevice-dev
    ```
 
 2. Build:

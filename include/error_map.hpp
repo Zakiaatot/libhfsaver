@@ -18,5 +18,6 @@ extern const std::unordered_map<HfsRet, const char*> g_error_map;
 #define ERROR_FFMPEG_READ_PACKET -11
 #define ERROR_HFS_MAX_TASK -12
 #define ERROR_HFS_TASK_NOT_FOUND -13
+#define ERROR_HFS_CMD_EXEC -14
 
 #endif //!_ERROR_MAP_HPP_
