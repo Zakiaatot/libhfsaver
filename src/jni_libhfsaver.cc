@@ -3,7 +3,7 @@
 #include "libhfsaver.h"
 #include "error_map.hpp"
 
-JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_taskBegin
+JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_taskBegin
 (
     JNIEnv* env, jclass cls, jstring url, jstring savePath, jintArray taskId
 )
@@ -26,7 +26,7 @@ JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_taskBegin
     return result;
 }
 
-JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_taskEnd
+JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_taskEnd
 (
     JNIEnv* env, jclass cls, jint taskId
 )
@@ -35,7 +35,7 @@ JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_taskEnd
     return hfs_task_end(taskId);
 }
 
-JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_taskQuery
+JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_taskQuery
 (
     JNIEnv* env, jclass cls, jint taskId, jobject taskInfo
 )
@@ -77,7 +77,7 @@ JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_taskQuery
     return result;
 }
 
-JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_taskQueryAllSize
+JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_taskQueryAllSize
 (
     JNIEnv* env, jclass cls, jintArray taskNum
 )
@@ -94,7 +94,7 @@ JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_taskQueryAllSize
     return result;
 }
 
-JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_taskQueryAll
+JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_taskQueryAll
 (
     JNIEnv* env, jclass cls, jobjectArray taskInfoArray
 )
@@ -177,7 +177,7 @@ JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_taskQueryAll
     return OK;
 }
 
-JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_errorMessageQuery
+JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_errorMessageQuery
 (
     JNIEnv* env, jclass cls, jint errorCode, jbyteArray errBuf
 )
@@ -194,7 +194,7 @@ JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_errorMessageQuery
     return result;
 }
 
-JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_utilsSplitMp3FromFlv
+JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_utilsSplitMp3FromFlv
 (
     JNIEnv* env, jclass cls, jstring flvSavePath, jstring mp3SavePath
 )
@@ -211,7 +211,7 @@ JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_utilsSplitMp3FromFlv
     return result;
 }
 
-JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_utilsGetKeyFrame
+JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_utilsGetKeyFrame
 (
     JNIEnv* env, jclass cls, jstring flvSavePath, jstring keyFrameSavePath, jfloat fps
 )
