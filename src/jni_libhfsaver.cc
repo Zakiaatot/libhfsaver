@@ -49,16 +49,20 @@ JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_taskQuery
     jfieldID fidLastError = env->GetFieldID(taskInfoClass, "lastError", "I");
     jfieldID fidLastSaveTime = env->GetFieldID(taskInfoClass, "lastSaveTime", "J");
     jfieldID fidSavedSize = env->GetFieldID(taskInfoClass, "savedSize", "J");
+    jfieldID fidStartTime = env->GetFieldID(taskInfoClass, "startTime", "J");
 
-    if (fidTaskId == NULL || fidStatus == NULL || fidLastError == NULL ||
-        fidLastSaveTime == NULL || fidSavedSize == NULL) {
+    if (
+        fidTaskId == NULL || fidStatus == NULL || fidLastError == NULL ||
+        fidLastSaveTime == NULL || fidSavedSize == NULL || fidStartTime == NULL)
+    {
         return ERROR_JNI_OBJECT_DEFINE; // 适当的错误处理
     }
 
     HfsTaskInfo nativeTaskInfo;
     HfsRet result = hfs_task_query(taskId, &nativeTaskInfo);
 
-    if (result != OK) {
+    if (result != OK)
+    {
         return result; // 直接返回错误结果
     }
 
@@ -68,6 +72,7 @@ JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_taskQuery
     env->SetIntField(taskInfo, fidLastError, (jint)nativeTaskInfo.last_error);
     env->SetLongField(taskInfo, fidLastSaveTime, (jlong)nativeTaskInfo.last_save_time);
     env->SetLongField(taskInfo, fidSavedSize, (jlong)nativeTaskInfo.saved_size);
+    env->SetLongField(taskInfo, fidStartTime, (jlong)nativeTaskInfo.start_time);
 
     return result;
 }
@@ -138,17 +143,20 @@ JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_taskQueryAll
     jfieldID fidLastError = env->GetFieldID(taskInfoClass, "lastError", "I");
     jfieldID fidLastSaveTime = env->GetFieldID(taskInfoClass, "lastSaveTime", "J");
     jfieldID fidSavedSize = env->GetFieldID(taskInfoClass, "savedSize", "J");
+    jfieldID fidStartTime = env->GetFieldID(taskInfoClass, "startTime", "J");
 
     // 检查所有字段 ID 是否已获取
     if (constructor == NULL || fidTaskId == NULL || fidStatus == NULL || fidLastError == NULL ||
-        fidLastSaveTime == NULL || fidSavedSize == NULL) {
+        fidLastSaveTime == NULL || fidSavedSize == NULL || fidStartTime == NULL)
+    {
         // 错误处理
         free(taskInfoList);
         return ERROR_JNI_OBJECT_DEFINE;
     }
 
     // 遍历所有任务信息，构造 Java 对象并填充数据
-    for (int i = 0; i < task_num; i++) {
+    for (int i = 0; i < task_num; i++)
+    {
         jobject taskInfoObj = env->NewObject(taskInfoClass, constructor);
 
         // 设置字段
@@ -157,6 +165,7 @@ JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_taskQueryAll
         env->SetIntField(taskInfoObj, fidLastError, (jint)taskInfoList[i].last_error);
         env->SetLongField(taskInfoObj, fidLastSaveTime, (jlong)taskInfoList[i].last_save_time);
         env->SetLongField(taskInfoObj, fidSavedSize, (jlong)taskInfoList[i].saved_size);
+        env->SetLongField(taskInfoObj, fidStartTime, (jlong)taskInfoList[i].start_time);
 
         // 将 Java 对象设置到数组元素中
         env->SetObjectArrayElement(taskInfoArray, i, taskInfoObj);

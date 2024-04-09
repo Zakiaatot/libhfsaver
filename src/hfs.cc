@@ -4,7 +4,6 @@ extern "C"
 #include <libavformat/avformat.h>
 }
 #include <string>
-#include <iostream>
 #include "hfs.hpp"
 #include "error_map.hpp"
 #include "utils.hpp"
@@ -38,6 +37,7 @@ Hfs::Status<int> Hfs::task_begin(std::string url, std::string save_path)
                 HfsTaskStatus::Processing,
                 OK,
                 Utils::get_timestamp_ms(),
+                0,
                 0
             }
         )
@@ -91,6 +91,10 @@ void Hfs::task_info_update(int task_id, std::string save_path)
     Hfs& hfs = Singleton<Hfs>::get_instance();
     std::unique_lock<std::mutex> lock(hfs.map_mutex_);
     hfs.task_info_map_[task_id].last_save_time = Utils::get_timestamp_ms();
+    if (hfs.task_info_map_[task_id].start_time == 0)
+    {
+        hfs.task_info_map_[task_id].start_time = hfs.task_info_map_[task_id].last_save_time;
+    }
     unsigned long file_size = Utils::get_file_size(save_path.c_str());
     if (file_size > 0)
     {
@@ -100,8 +104,6 @@ void Hfs::task_info_update(int task_id, std::string save_path)
 
 void Hfs::task_process(int task_id, std::string url, std::string save_path)
 {
-    std::cout << url << std::endl;
-    std::cout << save_path << std::endl;
     AVFormatContext* in_fmt_ctx = NULL, * out_fmt_ctx = NULL;
     AVIOContext* out_avio_ctx = NULL;
     int ret = 0;
@@ -241,7 +243,7 @@ Hfs::StatusVoid Hfs::utils_split_mp3_from_flv(std::string flv_save_path, std::st
     command += flv_save_path;
     command += "\" -q:a 5 \"";
     command += mp3_save_path;
-    command += "\"";
+    command += "\" -y";
 
     // 运行FFmpeg命令
     int result = std::system(command.c_str());
@@ -264,7 +266,7 @@ Hfs::StatusVoid Hfs::utils_get_key_frame(std::string flv_save_path, std::string 
     command += std::to_string(fps);
     command += " \"";
     command += key_frame_save_path;
-    command += "/%d.jpg\"";
+    command += "/%d.jpg\" -y";
 
     // 运行FFmpeg命令
     int result = std::system(command.c_str());

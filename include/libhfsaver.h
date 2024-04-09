@@ -23,6 +23,7 @@ extern "C"
         HfsRet last_error;
         unsigned long last_save_time;
         unsigned long saved_size;
+        long long start_time;
     }HfsTaskInfo;
 
     // http-flv save task

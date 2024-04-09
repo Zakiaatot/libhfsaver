@@ -7,7 +7,7 @@ public class Main {
         int taskId = 0;
         try {
             taskId = JNI.startTask(
-                    "https://ali-adaptive.pull.yximgs.com/gifshow/kwai_actL_ksle_20240318110103_iJP_strL_hd2000.flv?auth_key=1712496127-0-0-6ce27a582cc4889d9aa1bbc04f8360dd&tsc=origin&highTraffic=2&oidc=alihb&srcStrm=AgFHxpssMP8&fd=1&ss=s3&kabr_spts=-5000",
+                    "https://hw-adaptive.pull.yximgs.com/gifshow/kwai_actL_ksle_20240318110103_iJP_strL_hd2000.flv?hwTime=6615f2fd&hwSecret=c2d9bf4f9e9494292c1d41148d1c09cd&tsc=origin&highTraffic=2&oidc=alihb&srcStrm=pdhHZAz5hN0&fd=1&ss=s23&kabr_spts=-5000",
                     "out.flv");
         } catch (JNIException e) {
             e.printStackTrace();

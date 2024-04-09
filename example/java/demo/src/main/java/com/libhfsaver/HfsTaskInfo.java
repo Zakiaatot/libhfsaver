@@ -6,6 +6,7 @@ public class HfsTaskInfo {
     private int lastError;
     private long lastSaveTime;
     private long savedSize;
+    private long startTime;
 
     // 无参构造器
     public HfsTaskInfo() {
@@ -13,12 +14,13 @@ public class HfsTaskInfo {
     }
 
     // 带参数的构造器，可选，便于在代码中创建实例
-    public HfsTaskInfo(int taskId, int status, int lastError, long lastSaveTime, long savedSize) {
+    public HfsTaskInfo(int taskId, int status, int lastError, long lastSaveTime, long savedSize, long startTime) {
         this.taskId = taskId;
         this.status = status;
         this.lastError = lastError;
         this.lastSaveTime = lastSaveTime;
         this.savedSize = savedSize;
+        this.startTime = startTime;
     }
 
     // 注意：此处的getter和setter方法是公开的，以便JNI使用
@@ -63,6 +65,14 @@ public class HfsTaskInfo {
         this.savedSize = savedSize;
     }
 
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+
     // 重写 toString 方法，便于打印和调试
     @Override
     public String toString() {
@@ -72,6 +82,7 @@ public class HfsTaskInfo {
                 ", lastError=" + lastError +
                 ", lastSaveTime=" + lastSaveTime +
                 ", savedSize=" + savedSize +
+                ", startTime=" + startTime +
                 '}';
     }
 }
