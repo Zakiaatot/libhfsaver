@@ -227,3 +227,20 @@ JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_utilsGetKeyFrame
 
     return result;
 }
+
+JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_utilsFlvToMp4
+(
+    JNIEnv* env, jclass cls, jstring flvSavePath,
+    jstring mp4SavePath
+)
+{
+    const char* nativeFlvSavePath = env->GetStringUTFChars(flvSavePath, 0);
+    const char* nativeMp4SavePath = env->GetStringUTFChars(mp4SavePath, 0);
+
+    HfsRet result = hfs_utils_flv_to_mp4(nativeFlvSavePath, nativeMp4SavePath);
+
+    env->ReleaseStringUTFChars(flvSavePath, nativeFlvSavePath);
+    env->ReleaseStringUTFChars(mp4SavePath, nativeMp4SavePath);
+
+    return result;
+}
