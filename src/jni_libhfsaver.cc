@@ -228,7 +228,7 @@ JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_utilsGetKeyFrame
     return result;
 }
 
-JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_utilsFlvToMp4
+JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_utilsFlvToMp4
 (
     JNIEnv* env, jclass cls, jstring flvSavePath,
     jstring mp4SavePath
