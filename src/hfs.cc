@@ -279,3 +279,15 @@ Hfs::StatusVoid Hfs::utils_get_key_frame(std::string flv_save_path, std::string 
 
     return StatusVoid::ok();
 }
+
+Hfs::StatusVoid Hfs::utils_flv_to_mp4(std::string flv_save_path, std::string mp4_save_path)
+{
+    // ffmpeg -i input.flv -c copy output.mp4 -y
+    std::string command = "ffmpeg -i \"" + flv_save_path + "\" -c copy \"" + mp4_save_path + "\" -y";
+    int result = system(command.c_str());
+    if (result != 0)
+    {
+        return StatusVoid::err(ERROR_HFS_CMD_EXEC);
+    }
+    return StatusVoid::ok();
+}

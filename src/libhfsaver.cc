@@ -75,3 +75,8 @@ HfsRet hfs_utils_get_key_frame(IN const char* flv_save_path, IN const char* key_
     return Singleton<Hfs>::get_instance().utils_get_key_frame(flv_save_path, key_frame_save_path, fps).msg_code;
 }
 
+HfsRet hfs_utils_flv_to_mp4(IN const char* flv_save_path, IN const char* mp4_save_path)
+{
+    return Singleton<Hfs>::get_instance().utils_flv_to_mp4(flv_save_path, mp4_save_path).msg_code;
+}
+
