@@ -23,7 +23,12 @@ Hfs::~Hfs()
 Hfs::Status<int> Hfs::task_begin(std::string url, std::string save_path)
 {
     std::unique_lock<std::mutex> lock(map_mutex_);
-    if (task_info_map_.size() >= HFS_MAX_TASK_NUM)
+    int count = 0;
+    for (auto& i : task_info_map_) {
+        if (i.second.status == HfsTaskStatus::Processing)
+            count++;
+    }
+    if (count >= HFS_MAX_TASK_NUM)
     {
         return Status<int>::err(ERROR_HFS_MAX_TASK);
     }
