@@ -40,6 +40,8 @@ public class JNI {
 
     public static native int utilsGetKeyFrame(String flvSavePath, String keyFrameSavePath, float fps);
 
+    public static native int utilsFlvToMp4(String flvSavePath, String mp4SavePath);
+
     public static int startTask(String url, String savePath) throws JNIException {
         int[] taskId = new int[1];
         int resultCode = taskBegin(url, savePath, taskId);
@@ -122,6 +124,14 @@ public class JNI {
 
         if (resultCode != 0) {
             throw new JNIException("Failed to get key frame", resultCode);
+        }
+    }
+
+    public static void flvToMp4(String flvSavePath, String mp4SavePath) throws JNIException {
+        int resultCode = utilsFlvToMp4(flvSavePath, mp4SavePath);
+
+        if (resultCode != 0) {
+            throw new JNIException("Failed to convert FLV to MP4", resultCode);
         }
     }
 
