@@ -35,6 +35,8 @@ public:
     StatusVoid utils_split_mp3_from_flv(std::string flv_save_path, std::string mp3_save_path);
     StatusVoid utils_get_key_frame(std::string flv_save_path, std::string key_frame_save_path, const float fps);
     StatusVoid utils_flv_to_mp4(std::string flv_save_path, std::string mp4_save_path);
+    StatusVoid utils_cut_video(std::string in_path, std::string out_path, unsigned long start_sec, unsigned long end_sec);
+    Status<HfsVideoInfo> utils_get_video_info(std::string in_path);
 private:
     Hfs();
     ~Hfs();

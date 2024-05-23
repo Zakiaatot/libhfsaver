@@ -27,6 +27,10 @@ extern "C" {
 
     JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_utilsFlvToMp4(JNIEnv* env, jclass cls, jstring flvSavePath, jstring mp4SavePath);
 
+    JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_utilsCutVideo(JNIEnv* env, jclass cls, jstring inPath, jstring outPath, jlong start_sec, jlong end_sec);
+
+    JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_utilsGetVideoInfo(JNIEnv* env, jclass cls, jstring inPath, jobject videoInfo);
+
 #ifdef __cplusplus
 }
 #endif //!__cplusplus

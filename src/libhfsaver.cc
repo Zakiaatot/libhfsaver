@@ -80,3 +80,18 @@ HfsRet hfs_utils_flv_to_mp4(IN const char* flv_save_path, IN const char* mp4_sav
     return Singleton<Hfs>::get_instance().utils_flv_to_mp4(flv_save_path, mp4_save_path).msg_code;
 }
 
+HfsRet hfs_utils_cut_video(IN const char* in_path, IN const char* out_path, IN unsigned long start_sec, IN unsigned long end_sec)
+{
+    return Singleton<Hfs>::get_instance().utils_cut_video(in_path, out_path, start_sec, end_sec).msg_code;
+}
+
+HfsRet hfs_utils_get_video_info(IN const char* in_path, OUT HfsVideoInfo* video_info)
+{
+    auto res = Singleton<Hfs>::get_instance().utils_get_video_info(in_path);
+    if (res)
+    {
+        *video_info = res.ret;
+    }
+    return res.msg_code;
+}
+

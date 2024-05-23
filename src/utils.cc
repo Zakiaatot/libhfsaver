@@ -1,6 +1,8 @@
 #include <chrono>
 #include <filesystem>
 #include <system_error>
+#include <sstream>
+#include <iomanip>
 #include "utils.hpp"
 
 unsigned long Utils::get_timestamp_ms()
@@ -23,4 +25,18 @@ unsigned long Utils::get_file_size(const char* path)
     {
         return file_size;
     }
+}
+
+
+std::string Utils::seconds_to_time(unsigned long seconds) {
+    unsigned long hours = seconds / 3600;
+    unsigned long minutes = (seconds % 3600) / 60;
+    seconds = seconds % 60;
+
+    std::stringstream ss;
+    ss << std::setw(2) << std::setfill('0') << hours << ":";
+    ss << std::setw(2) << std::setfill('0') << minutes << ":";
+    ss << std::setw(2) << std::setfill('0') << seconds;
+
+    return ss.str();
 }
