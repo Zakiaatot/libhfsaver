@@ -126,7 +126,7 @@ JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_taskQueryAll
     }
 
     // 获取 Java 类和字段 ID
-    jclass taskInfoClass = env->FindClass("com/libhfsaver/HfsTaskInfo");
+    jclass taskInfoClass = env->FindClass("com/sg/video/utils/HfsTaskInfo");
     if (taskInfoClass == NULL)
     {
         // 未找到类
@@ -228,7 +228,7 @@ JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_utilsGetKeyFrame
     return result;
 }
 
-JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_utilsFlvToMp4
+JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_utilsFlvToMp4
 (
     JNIEnv* env, jclass cls, jstring flvSavePath,
     jstring mp4SavePath
@@ -245,7 +245,7 @@ JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_utilsFlvToMp4
     return result;
 }
 
-JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_utilsCutVideo
+JNIEXPORT jint JNICALL Java_com_sg_video_JNI_utilsCutVideo
 (
     JNIEnv* env,
     jclass cls,
@@ -266,7 +266,7 @@ JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_utilsCutVideo
     return result;
 }
 
-JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_utilsGetVideoInfo
+JNIEXPORT jint JNICALL Java_com_sg_video_JNI_utilsGetVideoInfo
 (
     JNIEnv* env,
     jclass cls,
