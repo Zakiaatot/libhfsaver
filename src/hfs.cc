@@ -3,6 +3,7 @@ extern "C"
 {
 #include <libavformat/avformat.h>
 }
+#include <cstdio>
 #include <string>
 #include <array>
 #include <sstream>
@@ -337,7 +338,7 @@ Hfs::Status<HfsVideoInfo> Hfs::utils_get_video_info(std::string in_path)
     int status = _pclose(pipe);
 #else //!PLATFORM_WINDOWS
     std::array<char, 256> buffer;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"));
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
     if (!pipe)
     {
         return Status<HfsVideoInfo>::err(ERROR_HFS_CMD_EXEC);
