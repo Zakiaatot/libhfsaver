@@ -244,3 +244,65 @@ JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_utilsFlvToMp4
 
     return result;
 }
+
+JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_utilsCutVideo
+(
+    JNIEnv* env,
+    jclass cls,
+    jstring inPath,
+    jstring outPath,
+    jlong start_sec,
+    jlong end_sec
+)
+{
+    const char* nativeInPath = env->GetStringUTFChars(inPath, 0);
+    const char* nativeOutPath = env->GetStringUTFChars(outPath, 0);
+
+    HfsRet result = hfs_utils_cut_video(nativeInPath, nativeOutPath, start_sec, end_sec);
+
+    env->ReleaseStringUTFChars(inPath, nativeInPath);
+    env->ReleaseStringUTFChars(outPath, nativeOutPath);
+
+    return result;
+}
+
+JNIEXPORT jint JNICALL Java_com_libhfsaver_JNI_utilsGetVideoInfo
+(
+    JNIEnv* env,
+    jclass cls,
+    jstring inPath,
+    jobject videoInfo
+)
+{
+    const char* nativeInPath = env->GetStringUTFChars(inPath, 0);
+
+    // 获取Java类中的字段ID
+    jclass videoInfoClass = env->GetObjectClass(videoInfo);
+
+    // 获取Java类字段ID
+    jfieldID fidSize = env->GetFieldID(videoInfoClass, "size", "J");
+    jfieldID fidDuration = env->GetFieldID(videoInfoClass, "duration", "J");
+    jfieldID fidRawInfo = env->GetFieldID(videoInfoClass, "rawInfo", "Ljava/lang/String;");
+
+    if (fidSize == NULL || fidDuration == NULL || fidRawInfo == NULL)
+    {
+        return ERROR_JNI_OBJECT_DEFINE; // 适当的错误处理
+    }
+
+    HfsVideoInfo nativeVideoInfo;
+    HfsRet result = hfs_utils_get_video_info(nativeInPath, &nativeVideoInfo);
+
+    if (result != OK)
+    {
+        return result; // 直接返回错误结果
+    }
+
+    // 更新 Java 对象的字段
+    env->SetLongField(videoInfo, fidSize, (jlong)nativeVideoInfo.size);
+    env->SetLongField(videoInfo, fidDuration, (jlong)nativeVideoInfo.duration);
+    env->SetObjectField(videoInfo, fidRawInfo, env->NewStringUTF(nativeVideoInfo.raw_info));
+
+    delete[] nativeVideoInfo.raw_info;
+    env->ReleaseStringUTFChars(inPath, nativeInPath);
+    return result;
+}

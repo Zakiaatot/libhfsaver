@@ -11,6 +11,13 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED 17)
 
+# platform
+if (WIN32)
+    add_definitions(-DPLATFORM_WINDOWS)
+else()
+    add_definitions(-DPLATFORM_OTHER)
+endif()
+
 # ffmpeg libs
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
     include_directories(c:/ffmpeg/include)

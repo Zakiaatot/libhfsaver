@@ -4,6 +4,9 @@ extern "C"
 #include <libavformat/avformat.h>
 }
 #include <string>
+#include <array>
+#include <sstream>
+#include <iostream>
 #include "hfs.hpp"
 #include "error_map.hpp"
 #include "utils.hpp"
@@ -295,4 +298,87 @@ Hfs::StatusVoid Hfs::utils_flv_to_mp4(std::string flv_save_path, std::string mp4
         return StatusVoid::err(ERROR_HFS_CMD_EXEC);
     }
     return StatusVoid::ok();
+}
+
+Hfs::StatusVoid Hfs::utils_cut_video(std::string in_path, std::string out_path, unsigned long start_sec, unsigned long end_sec)
+{
+    // ffmpeg -i input.mp4 -ss 00:00:10 -t 00:00:20 -c copy output.mp4
+    std::string ss = Utils::seconds_to_time(start_sec), t = Utils::seconds_to_time(end_sec - start_sec);
+    std::string command = "ffmpeg -i \"" + in_path + "\" -ss " + ss + " -t " + t + " -c copy \"" + out_path + "\" -y";
+    // std::cout << command << std::endl;
+    int result = system(command.c_str());
+    if (result != 0)
+    {
+        return StatusVoid::err(ERROR_HFS_CMD_EXEC);
+    }
+    return StatusVoid::ok();
+}
+
+Hfs::Status<HfsVideoInfo> Hfs::utils_get_video_info(std::string in_path)
+{
+    // ffprobe -v error -show_format 1715305837494.mp4
+
+    HfsVideoInfo info;
+
+    std::string command = "ffprobe -v error -show_format \"" + in_path + "\"";
+    std::string result;
+
+#ifdef PLATFORM_WINDOWS
+    char buffer[256];
+    FILE* pipe = _popen(command.c_str(), "r");
+    if (!pipe)
+    {
+        return Status<HfsVideoInfo>::err(ERROR_HFS_CMD_EXEC);
+    }
+    while (fgets(buffer, sizeof(buffer), pipe) != NULL)
+    {
+        result += buffer;
+    }
+    int status = _pclose(pipe);
+#else //!PLATFORM_WINDOWS
+    std::array<char, 256> buffer;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"));
+    if (!pipe)
+    {
+        return Status<HfsVideoInfo>::err(ERROR_HFS_CMD_EXEC);
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != NULL)
+    {
+        result += buffer.data();
+    }
+    int status = pclose(pipe.get());
+#endif //!PLATFORM_WINDOWS
+    if (status != 0)
+    {
+        return Status<HfsVideoInfo>::err(ERROR_HFS_CMD_EXEC);
+    }
+
+    // 继续进行信息解析和赋值等操作
+    std::istringstream iss(result);
+    std::string line;
+    unsigned long start_time = 0;
+
+    while (std::getline(iss, line)) {
+        if (line.find("duration=") != std::string::npos)
+        {
+            std::istringstream durIss(line.substr(line.find("duration=") + 9));
+            durIss >> info.duration;
+            info.duration -= start_time;
+        }
+        else if (line.find("size=") != std::string::npos)
+        {
+            std::istringstream sizeIss(line.substr(line.find("size=") + 5));
+            sizeIss >> info.size;
+        }
+        else if (line.find("start_time=") != std::string::npos)
+        {
+            std::istringstream startIss(line.substr(line.find("start_time=") + 11));
+            startIss >> start_time;
+        }
+    }
+
+    info.raw_info = new char[result.size() + 1] {0};
+    memcpy((void*)info.raw_info, (void*)result.c_str(), result.size());
+
+    return Status<HfsVideoInfo>::ok(info);
 }

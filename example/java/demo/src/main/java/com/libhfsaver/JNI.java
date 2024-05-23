@@ -42,6 +42,10 @@ public class JNI {
 
     public static native int utilsFlvToMp4(String flvSavePath, String mp4SavePath);
 
+    public static native int utilsCutVideo(String inPath, String outPath, long start_sec, long end_sec);
+
+    public static native int utilsGetVideoInfo(String inPath, HfsVideoInfo videoInfo);
+
     public static int startTask(String url, String savePath) throws JNIException {
         int[] taskId = new int[1];
         int resultCode = taskBegin(url, savePath, taskId);
