@@ -323,9 +323,9 @@ Hfs::Status<HfsVideoInfo> Hfs::utils_get_video_info(std::string in_path)
 
     std::string command = "ffprobe -v error -show_format \"" + in_path + "\"";
     std::string result;
+    char buffer[256];
 
 #ifdef PLATFORM_WINDOWS
-    char buffer[256];
     FILE* pipe = _popen(command.c_str(), "r");
     if (!pipe)
     {
@@ -337,17 +337,16 @@ Hfs::Status<HfsVideoInfo> Hfs::utils_get_video_info(std::string in_path)
     }
     int status = _pclose(pipe);
 #else //!PLATFORM_WINDOWS
-    std::array<char, 256> buffer;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
+    FILE* pipe = popen(command.c_str(), "r");
     if (!pipe)
     {
         return Status<HfsVideoInfo>::err(ERROR_HFS_CMD_EXEC);
     }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != NULL)
+    while (fgets(buffer, sizeof(buffer), pipe) != NULL)
     {
-        result += buffer.data();
+        result += buffer;
     }
-    int status = pclose(pipe.get());
+    int status = pclose(pipe);
 #endif //!PLATFORM_WINDOWS
     if (status != 0)
     {
