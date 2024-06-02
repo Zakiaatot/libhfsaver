@@ -8,6 +8,7 @@ std::ostream& operator<<(std::ostream& os, const HfsTaskInfo& info)
     os << "task_id: " << info.task_id << std::endl;
     os << "status: " << info.status << std::endl;
     os << "last_error: " << info.last_error << std::endl;
+    os << "start_time: " << info.start_time << std::endl;
     os << "last_save_time: " << info.last_save_time << std::endl;
     os << "saved_size: " << info.saved_size << std::endl;
     return os;
@@ -39,7 +40,7 @@ int main(int argc, char const* argv[])
         if (info.saved_size > 0)
         {
             hfs_utils_split_mp3_from_flv(argv[2], "1.mp3");
-            hfs_utils_get_key_frame(argv[2], "frames", 1.0f);
+            hfs_utils_get_key_frame(argv[2], "frames", 500.0f / (info.last_save_time - info.start_time));
         }
     }
 
