@@ -24,6 +24,7 @@ extern "C"
         unsigned long last_save_time;
         unsigned long saved_size;
         long long start_time;
+        char* custom_msg;
     }HfsTaskInfo;
     typedef struct
     {

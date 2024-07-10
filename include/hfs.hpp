@@ -43,6 +43,8 @@ private:
     static void task_process(int task_id, std::string url, std::string save_path);
     static void task_ret(int task_id, HfsRet msg_code);
     static void task_info_update(int task_id, std::string save_path);
+    static void task_info_update_thread(int task_id, std::string save_path);
+    static void task_kill_thread(int task_id, void* p_bp);
     std::atomic<int> task_id_counter_;
     ThreadPool* p_thread_pool_;
     std::unordered_map<int, HfsTaskInfo> task_info_map_;

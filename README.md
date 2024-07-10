@@ -54,3 +54,23 @@ A Thread-safe library for saving http-flv streams to disk.
 2. [x] Split audio from http-flv streams to mp3
 3. [x] Get keyframes from http-flv streams
 4. [x] Add java native interface
+
+## 2024-07-02
+
+### Add Boost
+
+1. Download Boost 1.85
+
+2. Install Boost 1.85
+
+   _`Ubuntu`_:
+
+   ```bash
+   ./b2 --prefix=/Boost install
+   ```
+
+   _`Windows`_:
+
+   ```powershell
+   .\b2.exe --prefix=c:\Boost install
+   ```

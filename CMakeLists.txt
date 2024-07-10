@@ -26,24 +26,44 @@ if(CMAKE_SYSTEM_NAME MATCHES "Windows")
 endif()
 add_subdirectory(lib/FFmpeg)
 
-# make sure we have all the required libraries
-include_directories(${PROJECT_SOURCE_DIR}/include)
-aux_source_directory(${PROJECT_SOURCE_DIR}/src SRC)
+# boost libs
+if(CMAKE_SYSTEM_NAME MATCHES "Windows")
+    set(BOOST_ROOT "C:\\Boost")
+else()
+    set(BOOST_ROOT "/Boost")
+endif()
+find_package(Boost COMPONENTS filesystem REQUIRED)
 
-# jni
-include_directories(${PROJECT_SOURCE_DIR}/jni)
+if(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+    
+    MESSAGE( STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}.")
+    MESSAGE( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}.")
+    MESSAGE( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
+
+    # make sure we have all the required libraries
+    include_directories(${PROJECT_SOURCE_DIR}/include)
+    aux_source_directory(${PROJECT_SOURCE_DIR}/src SRC)
+
+    # jni
+    include_directories(${PROJECT_SOURCE_DIR}/jni)
 
 
-add_library(${PROJECT_NAME}_shared SHARED ${SRC})
-set_target_properties(
-    ${PROJECT_NAME}_shared
-    PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/output/lib
-)
-add_library(${PROJECT_NAME}_static STATIC ${SRC})
-set_target_properties(
-    ${PROJECT_NAME}_static
-    PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/output/lib
-)
-target_link_libraries(${PROJECT_NAME}_shared FFmpeg)
+    add_library(${PROJECT_NAME}_shared SHARED ${SRC})
+    set_target_properties(
+        ${PROJECT_NAME}_shared
+        PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/output/lib
+    )
+    add_library(${PROJECT_NAME}_static STATIC ${SRC})
+    set_target_properties(
+        ${PROJECT_NAME}_static
+        PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/output/lib
+    )
+    target_link_libraries(${PROJECT_NAME}_shared ${Boost_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME}_shared FFmpeg)
+else()
+    MESSAGE( STATUS "Boost Not Found")
+endif()
+

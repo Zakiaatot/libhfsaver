@@ -3,6 +3,7 @@
 const std::unordered_map<HfsRet, const char*> g_error_map =
 {
     {OK, "ok"},
+
     {ERROR_UNKNOWN,"unknown error"},
     {ERROR_FFMPEG_INPUT_STREAM,"failed to open input stream"},
     {ERROR_FFMPEG_STREAM_INFO,"failed to get stream info"},
@@ -18,5 +19,6 @@ const std::unordered_map<HfsRet, const char*> g_error_map =
     {ERROR_HFS_TASK_NOT_FOUND,"task not found"},
     {ERROR_HFS_CMD_EXEC,"cmd execute failed"},
     {ERROR_JNI_OBJECT_DEFINE,"java object defined error"},
-    {ERROR_JNI_MEMORY_ALLOC,"jni malloc failed"}
+    {ERROR_JNI_MEMORY_ALLOC,"jni malloc failed"},
+    {ERROR_CUSTOM,"custom error"}
 };

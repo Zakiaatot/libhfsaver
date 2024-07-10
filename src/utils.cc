@@ -1,3 +1,11 @@
+#ifdef PLATFORM_WINDOWS
+#include <Windows.h>
+#else //!PLATFORM_WINDOWS
+#include <stdio.h>
+#include <unistd.h>
+#include <signal.h>
+#endif //!PLATFORM_WINDOWS
+
 #include <chrono>
 #include <filesystem>
 #include <system_error>
@@ -39,4 +47,16 @@ std::string Utils::seconds_to_time(unsigned long seconds) {
     ss << std::setw(2) << std::setfill('0') << seconds;
 
     return ss.str();
+}
+
+void Utils::send_sigint(unsigned long pid)
+{
+#ifdef PLATFORM_WINDOWS
+    AttachConsole((DWORD)pid);
+    SetConsoleCtrlHandler(NULL, TRUE);
+    GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0);
+    FreeConsole();
+#else //!PLATFORM_WINDOWS
+    kill((pid_t)pid, SIGINT);
+#endif //!PLATFORM_WINDOWS
 }

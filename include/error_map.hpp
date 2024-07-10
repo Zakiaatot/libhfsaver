@@ -21,5 +21,6 @@ extern const std::unordered_map<HfsRet, const char*> g_error_map;
 #define ERROR_HFS_CMD_EXEC -14
 #define ERROR_JNI_OBJECT_DEFINE -15
 #define ERROR_JNI_MEMORY_ALLOC -16
+#define ERROR_CUSTOM -17
 
 #endif //!_ERROR_MAP_HPP_

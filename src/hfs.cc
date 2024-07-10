@@ -9,9 +9,13 @@ extern "C"
 #include <array>
 #include <sstream>
 #include <iostream>
+#include <signal.h>
+#include <boost/process.hpp>
 #include "hfs.hpp"
 #include "error_map.hpp"
 #include "utils.hpp"
+
+namespace bp = boost::process;
 
 Hfs::Hfs() :
 	task_id_counter_(0),
@@ -46,7 +50,8 @@ Hfs::Status<int> Hfs::task_begin(std::string url, std::string save_path)
 				task_id,
 				HfsTaskStatus::Processing,
 				OK,
-				Utils::get_timestamp_ms(),
+				0,
+				0,
 				0,
 				0
 			}
@@ -112,150 +117,225 @@ void Hfs::task_info_update(int task_id, std::string save_path)
 	}
 }
 
+void Hfs::task_info_update_thread(int task_id, std::string save_path)
+{
+	std::cout << "task_info_update_thread begin" << std::endl;
+	Hfs& hfs = Singleton<Hfs>::get_instance();
+	for (;;)
+	{
+		{
+			std::unique_lock<std::mutex> lock(hfs.map_mutex_);
+			if (hfs.task_info_map_[task_id].status == HfsTaskStatus::Finish)
+				break;
+		}
+		unsigned long file_size = Utils::get_file_size(save_path.c_str());
+		if (file_size != 0) {
+			task_info_update(task_id, save_path);
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+	}
+	std::cout << "task_info_update_thread end" << std::endl;
+}
 
+void Hfs::task_kill_thread(int task_id, void* p_bp)
+{
+	std::cout << "task_kill_thread begin" << std::endl;
+	Hfs& hfs = Singleton<Hfs>::get_instance();
+	for (;;)
+	{
+		{
+			std::unique_lock<std::mutex> lock(hfs.map_mutex_);
+			if (hfs.task_info_map_[task_id].status == HfsTaskStatus::Finish)
+			{
+				auto pid = ((bp::child*)p_bp)->id();
+				Utils::send_sigint(pid);
+				break;
+			}
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+	std::cout << "task_kill_thread end" << std::endl;
+}
 
 void Hfs::task_process(int task_id, std::string url, std::string save_path)
 {
-	AVFormatContext* in_fmt_ctx = NULL, * out_fmt_ctx = NULL;
-	AVIOContext* out_avio_ctx = NULL;
-	int ret = 0;
-	int error_count = 0; // 容错计数
-	HfsRet hfs_ret = OK;
+	std::cout << "task_process begin" << std::endl;
 	Hfs& hfs = Singleton<Hfs>::get_instance();
+	std::string command = "ffmpeg -y -v verbose -rw_timeout 30000000 -loglevel error -hide_banner -user_agent \"Mozilla/5.0 (Linux; Android 11; SAMSUNG SM-G973U) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/14.2 Chrome/87.0.4280.141 Mobile Safari/537.36\" -protocol_whitelist \"rtmp,crypto,file,http,https,tcp,tls,udp,rtp\" -thread_queue_size 1024 -analyzeduration 20000000 -probesize 10000000 -fflags +discardcorrupt -i \"" + url + "\" -bufsize 8000k -sn -dn -reconnect_delay_max 60 -reconnect_streamed -reconnect_at_eof -max_muxing_queue_size 1024 -correct_ts_overflow 1 -map 0 -c:v copy -c:a copy -f flv \"" + save_path + "\"";
+	bp::ipstream out_stream;
+	bp::ipstream err_stream;
+	bp::child c(command, bp::std_out > out_stream, bp::std_err > err_stream);
+	std::thread u(task_info_update_thread, task_id, save_path);
+	std::thread k(task_kill_thread, task_id, (void*)&c);
 
-	do
+	c.wait();
+	std::string msg, line;
+	while (err_stream && std::getline(err_stream, line) && !line.empty())
 	{
-		// 打开输入流
-		if ((ret = avformat_open_input(&in_fmt_ctx, url.c_str(), NULL, NULL)) < 0)
-		{
-			hfs_ret = ERROR_FFMPEG_INPUT_STREAM;
-			break;
-		}
-
-		// 获取流信息
-		if ((ret = avformat_find_stream_info(in_fmt_ctx, NULL)) < 0)
-		{
-			hfs_ret = ERROR_FFMPEG_STREAM_INFO;
-			break;
-		}
-
-		// 打开输出文件
-		if ((ret = avio_open2(&out_avio_ctx, save_path.c_str(), AVIO_FLAG_WRITE, NULL, NULL)) < 0)
-		{
-			hfs_ret = ERROR_FFMPEG_OUTPUT_OPEN;
-			break;
-		}
-
-		// 创建输出文件上下文
-		auto fmt = av_guess_format("flv", NULL, NULL);
-		if ((ret = avformat_alloc_output_context2(&out_fmt_ctx, fmt, NULL, NULL)) < 0)
-		{
-			hfs_ret = ERROR_FFMPEG_OUTPUT_CONTEXT;
-			break;
-		}
-		out_fmt_ctx->pb = out_avio_ctx;
-		out_fmt_ctx->url = av_strdup(save_path.c_str());
-
-		// 复制输入流信息到输出上下文
-		for (unsigned int i = 0; i < in_fmt_ctx->nb_streams; i++)
-		{
-			AVStream* in_stream = in_fmt_ctx->streams[i];
-			const AVCodec* codec = avcodec_find_decoder(in_stream->codecpar->codec_id);
-			if (!codec)
-			{
-				hfs_ret = ERROR_FFMPEG_CODEC_FIND;
-				goto ErrorExit;
-			}
-			AVStream* out_stream = avformat_new_stream(out_fmt_ctx, NULL);
-			if (!out_stream)
-			{
-				hfs_ret = ERROR_FFMPEG_OUTPUT_CREATE;
-				goto ErrorExit;
-			}
-			ret = avcodec_parameters_copy(out_stream->codecpar, in_stream->codecpar);
-			if (ret < 0)
-			{
-				hfs_ret = ERROR_FFMPEG_CODEC_COPY;
-				goto ErrorExit;
-			}
-		}
-
-		// 写文件头
-		if ((ret = avformat_write_header(out_fmt_ctx, NULL)) < 0)
-		{
-			hfs_ret = ERROR_FFMPEG_WRITE_HEADER;
-			break;
-		}
-
-		// 复制数据包
-		AVPacket pkt{};
-		for (;;)
-		{
-			{
-				std::unique_lock<std::mutex> lock(hfs.map_mutex_);
-				if (hfs.task_info_map_[task_id].status == HfsTaskStatus::Finish)
-					break;
-			}
-			ret = av_read_frame(in_fmt_ctx, &pkt);
-			if (ret < 0)
-			{
-				if (ret == AVERROR_EOF)
-				{
-					break;
-				}
-
-				error_count++; // 增加错误计数
-				if (error_count > 24) // 超过24帧错误，跳出循环
-				{
-					hfs_ret = ERROR_FFMPEG_READ_PACKET;
-					goto ErrorExit;
-				}
-
-				continue; // 跳过当前帧的错误，继续读取下一帧
-			}
-
-			error_count = 0; // 成功读取，则重置错误计数
-
-			av_packet_rescale_ts(&pkt, in_fmt_ctx->streams[pkt.stream_index]->time_base,
-				out_fmt_ctx->streams[pkt.stream_index]->time_base);
-
-			ret = av_interleaved_write_frame(out_fmt_ctx, &pkt);
-			if (ret < 0)
-			{
-				hfs_ret = ERROR_FFMPEG_WRITE_PACKET;
-				goto ErrorExit;
-			}
-
-			av_packet_unref(&pkt);
-			task_info_update(task_id, save_path.c_str());
-		}
-
-		//正常结束
-		avformat_close_input(&in_fmt_ctx);
-		if (out_fmt_ctx && !out_avio_ctx)
-		{
-			av_write_trailer(out_fmt_ctx);
-			avformat_free_context(out_fmt_ctx);
-		}
-		avio_closep(&out_avio_ctx);
-		{
-			std::unique_lock<std::mutex> lock(hfs.map_mutex_);
-			hfs.task_info_map_[task_id].status = HfsTaskStatus::Finish;
-			return;
-		}
-	} while (false);
-
-	// 异常结束
-ErrorExit:
-	avformat_close_input(&in_fmt_ctx);
-	if (out_fmt_ctx && !out_avio_ctx)
-	{
-		av_write_trailer(out_fmt_ctx);
-		avformat_free_context(out_fmt_ctx);
+		msg += line + "\n";
 	}
-	avio_closep(&out_avio_ctx);
-	return task_ret(task_id, hfs_ret);
+
+	if (msg.length() > 0)
+	{
+		std::unique_lock<std::mutex> lock(hfs.map_mutex_);
+		hfs.task_info_map_[task_id].last_error = ERROR_CUSTOM;
+		hfs.task_info_map_[task_id].custom_msg = new char[msg.length() + 1];
+		strcpy(hfs.task_info_map_[task_id].custom_msg, msg.c_str());
+		hfs.task_info_map_[task_id].status = HfsTaskStatus::Finish;
+	}
+	else {
+		std::unique_lock<std::mutex> lock(hfs.map_mutex_);
+		hfs.task_info_map_[task_id].last_error = OK;
+		hfs.task_info_map_[task_id].status = HfsTaskStatus::Finish;
+	}
+	u.join();
+	k.join();
+	std::cout << "task_process end" << std::endl;
 }
+
+
+// void Hfs::task_process(int task_id, std::string url, std::string save_path)
+// {
+// 	AVFormatContext* in_fmt_ctx = NULL, * out_fmt_ctx = NULL;
+// 	AVIOContext* out_avio_ctx = NULL;
+// 	int ret = 0;
+// 	int error_count = 0; // 容错计数
+// 	HfsRet hfs_ret = OK;
+// 	Hfs& hfs = Singleton<Hfs>::get_instance();
+
+// 	do
+// 	{
+// 		// 打开输入流
+// 		if ((ret = avformat_open_input(&in_fmt_ctx, url.c_str(), NULL, NULL)) < 0)
+// 		{
+// 			hfs_ret = ERROR_FFMPEG_INPUT_STREAM;
+// 			break;
+// 		}
+
+// 		// 获取流信息
+// 		if ((ret = avformat_find_stream_info(in_fmt_ctx, NULL)) < 0)
+// 		{
+// 			hfs_ret = ERROR_FFMPEG_STREAM_INFO;
+// 			break;
+// 		}
+
+// 		// 打开输出文件
+// 		if ((ret = avio_open2(&out_avio_ctx, save_path.c_str(), AVIO_FLAG_WRITE, NULL, NULL)) < 0)
+// 		{
+// 			hfs_ret = ERROR_FFMPEG_OUTPUT_OPEN;
+// 			break;
+// 		}
+
+// 		// 创建输出文件上下文
+// 		auto fmt = av_guess_format("flv", NULL, NULL);
+// 		if ((ret = avformat_alloc_output_context2(&out_fmt_ctx, fmt, NULL, NULL)) < 0)
+// 		{
+// 			hfs_ret = ERROR_FFMPEG_OUTPUT_CONTEXT;
+// 			break;
+// 		}
+// 		out_fmt_ctx->pb = out_avio_ctx;
+// 		out_fmt_ctx->url = av_strdup(save_path.c_str());
+
+// 		// 复制输入流信息到输出上下文
+// 		for (unsigned int i = 0; i < in_fmt_ctx->nb_streams; i++)
+// 		{
+// 			AVStream* in_stream = in_fmt_ctx->streams[i];
+// 			const AVCodec* codec = avcodec_find_decoder(in_stream->codecpar->codec_id);
+// 			if (!codec)
+// 			{
+// 				hfs_ret = ERROR_FFMPEG_CODEC_FIND;
+// 				goto ErrorExit;
+// 			}
+// 			AVStream* out_stream = avformat_new_stream(out_fmt_ctx, NULL);
+// 			if (!out_stream)
+// 			{
+// 				hfs_ret = ERROR_FFMPEG_OUTPUT_CREATE;
+// 				goto ErrorExit;
+// 			}
+// 			ret = avcodec_parameters_copy(out_stream->codecpar, in_stream->codecpar);
+// 			if (ret < 0)
+// 			{
+// 				hfs_ret = ERROR_FFMPEG_CODEC_COPY;
+// 				goto ErrorExit;
+// 			}
+// 		}
+
+// 		// 写文件头
+// 		if ((ret = avformat_write_header(out_fmt_ctx, NULL)) < 0)
+// 		{
+// 			hfs_ret = ERROR_FFMPEG_WRITE_HEADER;
+// 			break;
+// 		}
+
+// 		// 复制数据包
+// 		AVPacket pkt{};
+// 		for (;;)
+// 		{
+// 			{
+// 				std::unique_lock<std::mutex> lock(hfs.map_mutex_);
+// 				if (hfs.task_info_map_[task_id].status == HfsTaskStatus::Finish)
+// 					break;
+// 			}
+// 			ret = av_read_frame(in_fmt_ctx, &pkt);
+// 			if (ret < 0)
+// 			{
+// 				if (ret == AVERROR_EOF)
+// 				{
+// 					break;
+// 				}
+
+// 				error_count++; // 增加错误计数
+// 				if (error_count > 24) // 超过24帧错误，跳出循环
+// 				{
+// 					hfs_ret = ERROR_FFMPEG_READ_PACKET;
+// 					goto ErrorExit;
+// 				}
+
+// 				continue; // 跳过当前帧的错误，继续读取下一帧
+// 			}
+
+// 			error_count = 0; // 成功读取，则重置错误计数
+
+// 			av_packet_rescale_ts(&pkt, in_fmt_ctx->streams[pkt.stream_index]->time_base,
+// 				out_fmt_ctx->streams[pkt.stream_index]->time_base);
+
+// 			ret = av_interleaved_write_frame(out_fmt_ctx, &pkt);
+// 			if (ret < 0)
+// 			{
+// 				hfs_ret = ERROR_FFMPEG_WRITE_PACKET;
+// 				goto ErrorExit;
+// 			}
+
+// 			av_packet_unref(&pkt);
+// 			task_info_update(task_id, save_path.c_str());
+// 		}
+
+// 		//正常结束
+// 		avformat_close_input(&in_fmt_ctx);
+// 		if (out_fmt_ctx && !out_avio_ctx)
+// 		{
+// 			av_write_trailer(out_fmt_ctx);
+// 			avformat_free_context(out_fmt_ctx);
+// 		}
+// 		avio_closep(&out_avio_ctx);
+// 		{
+// 			std::unique_lock<std::mutex> lock(hfs.map_mutex_);
+// 			hfs.task_info_map_[task_id].status = HfsTaskStatus::Finish;
+// 			return;
+// 		}
+// 	} while (false);
+
+// 	// 异常结束
+// ErrorExit:
+// 	avformat_close_input(&in_fmt_ctx);
+// 	if (out_fmt_ctx && !out_avio_ctx)
+// 	{
+// 		av_write_trailer(out_fmt_ctx);
+// 		avformat_free_context(out_fmt_ctx);
+// 	}
+// 	avio_closep(&out_avio_ctx);
+// 	return task_ret(task_id, hfs_ret);
+// }
 
 
 Hfs::StatusVoid Hfs::utils_split_mp3_from_flv(std::string flv_save_path, std::string mp3_save_path) {

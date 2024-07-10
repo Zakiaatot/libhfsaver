@@ -11,6 +11,8 @@ std::ostream& operator<<(std::ostream& os, const HfsTaskInfo& info)
     os << "start_time: " << info.start_time << std::endl;
     os << "last_save_time: " << info.last_save_time << std::endl;
     os << "saved_size: " << info.saved_size << std::endl;
+    if (info.custom_msg)
+        os << "custom_msg: " << info.custom_msg << std::endl;
     return os;
 }
 
@@ -37,16 +39,14 @@ int main(int argc, char const* argv[])
             }
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
+        hfs_task_end(task_id);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
         if (info.saved_size > 0)
         {
             hfs_utils_split_mp3_from_flv(argv[2], "1.mp3");
             hfs_utils_get_key_frame(argv[2], "frames", 500.0f / (info.last_save_time - info.start_time));
         }
     }
-
-    char buf[HFS_ERROR_BUF_SIZE]{ 0 };
-    hfs_error_message_query(ret, buf);
-    std::cout << buf << std::endl;
 
     return task_id;
 }

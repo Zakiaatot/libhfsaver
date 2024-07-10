@@ -50,10 +50,11 @@ JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_taskQuery
     jfieldID fidLastSaveTime = env->GetFieldID(taskInfoClass, "lastSaveTime", "J");
     jfieldID fidSavedSize = env->GetFieldID(taskInfoClass, "savedSize", "J");
     jfieldID fidStartTime = env->GetFieldID(taskInfoClass, "startTime", "J");
+    jfieldID fidCustomMsg = env->GetFieldID(taskInfoClass, "customMsg", "Ljava/lang/String;");
 
     if (
         fidTaskId == NULL || fidStatus == NULL || fidLastError == NULL ||
-        fidLastSaveTime == NULL || fidSavedSize == NULL || fidStartTime == NULL)
+        fidLastSaveTime == NULL || fidSavedSize == NULL || fidStartTime == NULL || fidCustomMsg == NULL)
     {
         return ERROR_JNI_OBJECT_DEFINE; // 适当的错误处理
     }
@@ -73,6 +74,17 @@ JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_taskQuery
     env->SetLongField(taskInfo, fidLastSaveTime, (jlong)nativeTaskInfo.last_save_time);
     env->SetLongField(taskInfo, fidSavedSize, (jlong)nativeTaskInfo.saved_size);
     env->SetLongField(taskInfo, fidStartTime, (jlong)nativeTaskInfo.start_time);
+    // 将 char* 转换为 jstring 并设置 custom_msg 字段
+    if (nativeTaskInfo.custom_msg != NULL) {
+        jstring jCustomMsg = env->NewStringUTF(nativeTaskInfo.custom_msg);
+        env->SetObjectField(taskInfo, fidCustomMsg, jCustomMsg);
+        // 释放局部引用
+        env->DeleteLocalRef(jCustomMsg);
+    }
+    else {
+        // 处理 custom_msg 为空的情况
+        env->SetObjectField(taskInfo, fidCustomMsg, NULL);
+    }
 
     return result;
 }
@@ -144,10 +156,11 @@ JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_taskQueryAll
     jfieldID fidLastSaveTime = env->GetFieldID(taskInfoClass, "lastSaveTime", "J");
     jfieldID fidSavedSize = env->GetFieldID(taskInfoClass, "savedSize", "J");
     jfieldID fidStartTime = env->GetFieldID(taskInfoClass, "startTime", "J");
+    jfieldID fidCustomMsg = env->GetFieldID(taskInfoClass, "customMsg", "Ljava/lang/String;");
 
     // 检查所有字段 ID 是否已获取
     if (constructor == NULL || fidTaskId == NULL || fidStatus == NULL || fidLastError == NULL ||
-        fidLastSaveTime == NULL || fidSavedSize == NULL || fidStartTime == NULL)
+        fidLastSaveTime == NULL || fidSavedSize == NULL || fidStartTime == NULL || fidCustomMsg == NULL)
     {
         // 错误处理
         free(taskInfoList);
@@ -166,6 +179,18 @@ JNIEXPORT jint JNICALL Java_com_sg_video_utils_JNI_taskQueryAll
         env->SetLongField(taskInfoObj, fidLastSaveTime, (jlong)taskInfoList[i].last_save_time);
         env->SetLongField(taskInfoObj, fidSavedSize, (jlong)taskInfoList[i].saved_size);
         env->SetLongField(taskInfoObj, fidStartTime, (jlong)taskInfoList[i].start_time);
+        // 将 char* 转换为 jstring 并设置 custom_msg 字段
+        if (taskInfoList[i].custom_msg != NULL) {
+            jstring jCustomMsg = env->NewStringUTF(taskInfoList[i].custom_msg);
+            env->SetObjectField(taskInfoObj, fidCustomMsg, jCustomMsg);
+            // 释放局部引用
+            env->DeleteLocalRef(jCustomMsg);
+        }
+        else {
+            // 处理 custom_msg 为空的情况
+            env->SetObjectField(taskInfoObj, fidCustomMsg, NULL);
+        }
+
 
         // 将 Java 对象设置到数组元素中
         env->SetObjectArrayElement(taskInfoArray, i, taskInfoObj);
